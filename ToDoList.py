@@ -1,6 +1,8 @@
 import sys
 from PyQt6.QtWidgets import *
-from PyQt6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget,QCalendarWidget
+from PyQt6.QtGui import QFont
+from PyQt6.QtCore import QDate
 import sqlite3
 
 class ToDoDatabase:
@@ -67,17 +69,17 @@ class ToDoList(QWidget):
         #creating the buttons and shiz
         self.title = QLabel("")
         self.itemlists = QListWidget()
-        self.remove_button = QPushButton("Remove Item")
-        self.clear_button = QPushButton("Clear Items")
-        self.dialog = QPushButton("Dialog temp")
+        self.remove_button = QPushButton("Remove Task")
+        self.clear_button = QPushButton("Clear Tasks")
+        self.dialog = QPushButton("Add Task")
 
         # creating the layout
         self.main_layout = QVBoxLayout()
         row = QHBoxLayout()
 
+        row.addWidget(self.dialog)
         row.addWidget(self.remove_button)
         row.addWidget(self.clear_button)
-        row.addWidget(self.dialog)
 
         #putting it all together
         self.main_layout.addLayout(row)
@@ -99,17 +101,19 @@ class ToDoList(QWidget):
         text = self.itemlists.item(selected_item).text().strip()
         self.itemlists.takeItem(selected_item)
         self.db.remove_ToDo(text)
-        self.itemlists.itemClicked.connect(self.rise_and_shine)
 
         if self.itemlists.count() > 0:
             self.clear_button.setEnabled(True)
+            self.remove_button.setEnabled(True)
         else:
             self.clear_button.setEnabled(False)
-
+            self.remove_button.setEnabled(False)
     def clearItems(self):
         self.itemlists.clear()
         self.clear_button.setEnabled(False)
         self.db.clear_table()
+        self.clear_button.setEnabled(False)
+        self.remove_button.setEnabled(False)
 
     def rise_and_shine(self):
         self.remove_button.setEnabled(True)
@@ -128,6 +132,10 @@ class ToDoList(QWidget):
         # formatting
         self.titleText = QLabel("Title")
         self.titleEdit = QLineEdit("Task Title")
+        self.dateSelect = QCalendarWidget()
+        self.dateSelect.showToday()
+        current_Date = QDate.currentDate()
+        self.dateSelect.setMinimumDate(current_Date)
         self.descText = QLabel("Description")
         self.descEdit = QLineEdit("Description of Task...")
         self.DialogAddTask = QPushButton("Save")
@@ -136,6 +144,7 @@ class ToDoList(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(self.titleText)
         layout.addWidget(self.titleEdit)
+        layout.addWidget(self.dateSelect)
         layout.addWidget(self.descText)
         layout.addWidget(self.descEdit)
         layout.addWidget(self.DialogAddTask)
@@ -151,17 +160,48 @@ class ToDoList(QWidget):
         text = self.titleEdit.text().strip()
         moretext = self.descEdit.text().strip()
 
+        date = self.dateSelect.selectedDate()
+
+        today_Date = QDate.currentDate()
+
+        if date.year() == today_Date.year():
+            DueDateText = f"Due {date.toString('dddd, MMM d')}"
+        else: DueDateText = f"Due {date.toString('dddd, MMM d yyyy')}"
+
+        if moretext == "Description of Task...":
+            moretext = " "
+
+        days_diff = today_Date.daysTo(date)
+
+        if days_diff == 0:
+            remaining = "Today"
+        elif days_diff == 1:
+            remaining = "Tomorrow"
+        elif days_diff == -1:
+            remaining = "Yesterday"
+        elif days_diff > 1:
+            remaining = f"In {days_diff} days"
+        else:
+            remaining = f"{days_diff} days ago"
+
         if text and moretext:
             self.widget = QWidget()
             layout = QVBoxLayout()
-            jjj = QLabel(text)
-            qqq = QLabel(moretext)
-            print(text)
-            print(moretext)
+            taskTitle = QLabel(text)
+            taskDesc = QLabel(moretext)
+            taskDate = QLabel(DueDateText)
 
+            daysUntil= QLabel(remaining)
 
-            layout.addWidget(jjj)
-            layout.addWidget(qqq)
+            font = QFont()
+            font.setBold(True)
+            taskTitle.setFont(font)
+
+            layout.addWidget(taskTitle)
+            layout.addWidget(taskDesc)
+            layout.addWidget(taskDate)
+            layout.addWidget(daysUntil)
+            layout.addWidget(daysUntil)
 
             self.widget.setLayout(layout)
 
@@ -179,15 +219,7 @@ class ToDoList(QWidget):
             self.clear_button.setEnabled(False)
 
     def cancelTask(self):
-        pass
-
-
-
-
-
-
-
-
+        self.msg.close()
 
 def main():
     # create instance of the database
@@ -208,3 +240,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# to do:
+# add check box next to tasks for when you complete them
+# after u check it becomes gray
+# connect to db
+# add a visual timeline bar
