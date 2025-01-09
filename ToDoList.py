@@ -67,22 +67,19 @@ class ToDoList(QWidget):
         #creating the buttons and shiz
         self.title = QLabel("")
         self.itemlists = QListWidget()
-        self.add_button = QPushButton("Add Item")
         self.remove_button = QPushButton("Remove Item")
         self.clear_button = QPushButton("Clear Items")
-        self.adder = QLineEdit()
+        self.dialog = QPushButton("Dialog temp")
 
         # creating the layout
         self.main_layout = QVBoxLayout()
         row = QHBoxLayout()
 
-        row.addWidget(self.add_button)
         row.addWidget(self.remove_button)
         row.addWidget(self.clear_button)
+        row.addWidget(self.dialog)
 
         #putting it all together
-
-        self.main_layout.addWidget(self.adder)
         self.main_layout.addLayout(row)
         self.main_layout.addWidget(self.itemlists)
         self.setLayout(self.main_layout)
@@ -91,23 +88,11 @@ class ToDoList(QWidget):
         self.remove_button.setEnabled(False)
         self.clear_button.setEnabled(False)
 
-        self.add_button.clicked.connect(self.addItem)
         self.remove_button.clicked.connect(self.removeItems)
         self.clear_button.clicked.connect(self.clearItems)
-        self.adder.returnPressed.connect(self.addItem)
         self.itemlists.itemClicked.connect(self.rise_and_shine)
+        self.dialog.clicked.connect(self.dialog_box)
 
-    def addItem(self):
-        text = self.adder.text().strip()
-
-        if text:
-            self.itemlists.addItem(text)
-            self.db.add_ToDo(text)
-            self.adder.clear()
-        if self.itemlists.count() > 0:
-            self.clear_button.setEnabled(True)
-        else:
-            self.clear_button.setEnabled(False)
 
     def removeItems(self):
         selected_item = self.itemlists.currentRow()
@@ -134,6 +119,72 @@ class ToDoList(QWidget):
         todos = self.db.cur.fetchall()
         for todo in todos:
             self.itemlists.addItem(todo[1])
+
+    def dialog_box(self):
+        self.msg = QDialog()
+        self.msg.setWindowTitle("dialog box")
+        self.msg.show()
+        
+        # formatting
+        self.titleText = QLabel("Title")
+        self.titleEdit = QLineEdit("Task Title")
+        self.descText = QLabel("Description")
+        self.descEdit = QLineEdit("Description of Task...")
+        self.DialogAddTask = QPushButton("Save")
+        self.DialogCancelTask = QPushButton("Cancel")
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.titleText)
+        layout.addWidget(self.titleEdit)
+        layout.addWidget(self.descText)
+        layout.addWidget(self.descEdit)
+        layout.addWidget(self.DialogAddTask)
+        layout.addWidget(self.DialogCancelTask)
+
+        self.msg.setLayout(layout)
+
+        self.DialogAddTask.clicked.connect(self.addTask)
+        self.DialogCancelTask.clicked.connect(self.cancelTask)
+
+    def addTask(self):
+
+        text = self.titleEdit.text().strip()
+        moretext = self.descEdit.text().strip()
+
+        if text and moretext:
+            self.widget = QWidget()
+            layout = QVBoxLayout()
+            jjj = QLabel(text)
+            qqq = QLabel(moretext)
+            print(text)
+            print(moretext)
+
+
+            layout.addWidget(jjj)
+            layout.addWidget(qqq)
+
+            self.widget.setLayout(layout)
+
+            # adding the widget to the list
+
+            item = QListWidgetItem(self.itemlists)
+            item.setSizeHint(self.widget.sizeHint())
+            self.itemlists.setItemWidget(item, self.widget)
+            self.msg.close()
+
+
+        if self.itemlists.count() > 0:
+            self.clear_button.setEnabled(True)
+        else:
+            self.clear_button.setEnabled(False)
+
+    def cancelTask(self):
+        pass
+
+
+
+
+
 
 
 
