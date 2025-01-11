@@ -2,7 +2,7 @@ import sys
 from PyQt6.QtWidgets import *
 from PyQt6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget,QCalendarWidget
 from PyQt6.QtGui import QFont
-from PyQt6.QtCore import QDate
+from PyQt6.QtCore import QDate, Qt
 import sqlite3
 
 class ToDoDatabase:
@@ -131,19 +131,23 @@ class ToDoList(QWidget):
         
         # formatting
         self.titleText = QLabel("Title")
-        self.titleEdit = QLineEdit("Task Title")
+        self.titleEdit = QLineEdit()
+        self.titleEdit.setPlaceholderText("Task Title")
         self.dateSelect = QCalendarWidget()
         self.dateSelect.showToday()
         current_Date = QDate.currentDate()
         self.dateSelect.setMinimumDate(current_Date)
         self.descText = QLabel("Description")
-        self.descEdit = QLineEdit("Description of Task...")
+        self.descEdit = QLineEdit("")
+        self.descEdit.setPlaceholderText("Description of Task")
         self.DialogAddTask = QPushButton("Save")
         self.DialogCancelTask = QPushButton("Cancel")
+        self.dueDateLabel = QLabel("Due Date")
 
         layout = QVBoxLayout()
         layout.addWidget(self.titleText)
         layout.addWidget(self.titleEdit)
+        layout.addWidget(self.dueDateLabel)
         layout.addWidget(self.dateSelect)
         layout.addWidget(self.descText)
         layout.addWidget(self.descEdit)
@@ -154,6 +158,18 @@ class ToDoList(QWidget):
 
         self.DialogAddTask.clicked.connect(self.addTask)
         self.DialogCancelTask.clicked.connect(self.cancelTask)
+        self.titleEdit.editingFinished.connect(self.edit_made)
+        self.titleEdit.returnPressed.connect(self.edit_made)
+        self.DialogAddTask.setEnabled(False)
+
+
+
+    def edit_made(self):
+        blob = self.titleEdit.text().strip()
+        if blob == "":
+            self.DialogAddTask.setEnabled(False)
+        else:
+            self.DialogAddTask.setEnabled(True)
 
     def addTask(self):
 
@@ -168,9 +184,6 @@ class ToDoList(QWidget):
             DueDateText = f"Due {date.toString('dddd, MMM d')}"
         else: DueDateText = f"Due {date.toString('dddd, MMM d yyyy')}"
 
-        if moretext == "Description of Task...":
-            moretext = " "
-
         days_diff = today_Date.daysTo(date)
 
         if days_diff == 0:
@@ -184,29 +197,44 @@ class ToDoList(QWidget):
         else:
             remaining = f"{days_diff} days ago"
 
-        if text and moretext:
+        if text:
             self.widget = QWidget()
             layout = QVBoxLayout()
             taskTitle = QLabel(text)
-            taskDesc = QLabel(moretext)
+
+            if moretext:
+                taskDesc = QLabel(moretext)
+                layout.addWidget(taskDesc)
+
             taskDate = QLabel(DueDateText)
 
-            daysUntil= QLabel(remaining)
+            daysUntil = QLabel(remaining)
 
             font = QFont()
             font.setBold(True)
             taskTitle.setFont(font)
 
+            taskDate.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+            daysUntil.setAlignment(Qt.AlignmentFlag.AlignRight)
+
             layout.addWidget(taskTitle)
-            layout.addWidget(taskDesc)
-            layout.addWidget(taskDate)
-            layout.addWidget(daysUntil)
-            layout.addWidget(daysUntil)
+
+            item = QWidget()
+            layout2 = QHBoxLayout()
+            layout2.setContentsMargins(0, 0, 0, 0)
+
+
+            layout2.addWidget(taskDate)
+            layout2.addWidget(daysUntil)
+
+            item.setLayout(layout2)
+
+            layout.addWidget(item)
 
             self.widget.setLayout(layout)
 
             # adding the widget to the list
-
             item = QListWidgetItem(self.itemlists)
             item.setSizeHint(self.widget.sizeHint())
             self.itemlists.setItemWidget(item, self.widget)
@@ -246,3 +274,4 @@ if __name__ == "__main__":
 # after u check it becomes gray
 # connect to db
 # add a visual timeline bar
+# improve ui
