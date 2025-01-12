@@ -84,7 +84,6 @@ class ToDoList(QWidget):
         #putting it all together
         self.main_layout.addLayout(row)
         self.main_layout.addWidget(self.itemlists)
-        self.setLayout(self.main_layout)
 
         #disable clear and remove on start
         self.remove_button.setEnabled(False)
@@ -95,6 +94,7 @@ class ToDoList(QWidget):
         self.itemlists.itemClicked.connect(self.rise_and_shine)
         self.dialog.clicked.connect(self.dialog_box)
 
+        self.setLayout(self.main_layout)
 
     def removeItems(self):
         selected_item = self.itemlists.currentRow()
